@@ -1,10 +1,13 @@
+// Pinia store для управления учетными записями пользователей
 import { defineStore } from 'pinia'
 import type { Account } from '../types/account'
 
+// Экспортируемое хранилище аккаунтов
 export const useAccountsStore = defineStore('accounts', {
   state: () => ({
     accounts: [] as Account[],
   }),
+  // Методы для работы с аккаунтами
   actions: {
     addAccount(account: Account) {
       this.accounts.push(account)
@@ -19,5 +22,6 @@ export const useAccountsStore = defineStore('accounts', {
       }
     },
   },
+  // Автоматическое сохранение состояния в localStorage
   persist: true,
 })

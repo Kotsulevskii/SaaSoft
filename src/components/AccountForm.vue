@@ -1,8 +1,10 @@
 <template>
+  <!-- Основной контейнер формы -->
   <v-container>
     <v-row class="mb-4">
       <v-col cols="12">
         <h2>Учетные записи</h2>
+        <!-- Кнопка добавления новой учетной записи -->
         <v-btn icon small @click="addAccount" class="ml-2">
           <v-icon>mdi-plus</v-icon>
         </v-btn>
@@ -13,6 +15,7 @@
       Для указания нескольких меток используйте разделитель ";"
     </v-alert>
 
+    <!-- Таблица с учетными записями -->
     <v-table fixed-header>
       <thead>
         <tr>
@@ -24,8 +27,10 @@
         </tr>
       </thead>
       <tbody>
+        <!-- Перебор всех аккаунтов -->
         <tr v-for="(account) in accounts" :key="account.id">
           <td>
+            <!-- Поле для ввода меток -->
             <v-text-field
               v-model="account.tagsText"
               label="Метки"
@@ -34,6 +39,7 @@
             />
           </td>
           <td>
+            <!-- Выпадающий список типа записи -->
             <v-select
               v-model="account.type"
               :items="['LDAP', 'Local']"
@@ -43,6 +49,7 @@
             />
           </td>
           <td>
+            <!-- Поле для логина -->
             <v-text-field
               v-model="account.login"
               label="Логин"
@@ -51,6 +58,7 @@
             />
           </td>
           <td>
+            <!-- Поле для пароля (только для Local) -->
             <v-text-field
               v-if="account.type === 'Local'"
               v-model="account.password"
@@ -61,6 +69,7 @@
             />
           </td>
           <td>
+            <!-- Кнопка удаления аккаунта -->
             <v-btn icon small @click="removeAccount(account.id)">
               <v-icon color="red">mdi-delete</v-icon>
             </v-btn>
@@ -76,12 +85,16 @@ import { ref, watchEffect } from 'vue'
 import { useAccountsStore } from '../store/accounts'
 import type { AccountWithFields } from '../types/account'
 
+// Получаем store Pinia
 const store = useAccountsStore()
 
+// Локальный массив аккаунтов для работы с формой
 const accounts = ref<AccountWithFields[]>([])
 
+// Объект для хранения ошибок по id аккаунта
 const errorsById = ref<Record<string, AccountWithFields['errors']>>({})
 
+// Синхронизация локального массива с хранилищем
 watchEffect(() => {
   accounts.value = store.accounts.map(acc => ({
     ...acc,
@@ -89,6 +102,7 @@ watchEffect(() => {
   }))
 })
 
+// Генерация уникального id для новой учетной записи
 const generateId = () => Math.random().toString(36).substring(2, 9)
 
 const addAccount = () => {
@@ -125,12 +139,14 @@ const updateTags = (account: AccountWithFields) => {
 const validateAccount = (account: AccountWithFields) => {
   const errors: AccountWithFields['errors'] = {}
 
+  // Логин: обязательно, максимум 100 символов
   if (!account.login.trim()) {
     errors.login = 'Обязательное поле'
   } else if (account.login.length > 100) {
     errors.login = 'Максимум 100 символов'
   }
 
+  // Пароль: обязательно для Local, максимум 100 символов
   if (account.type === 'Local') {
     if (!account.password || !account.password.trim()) {
       errors.password = 'Обязательное поле'
@@ -139,6 +155,7 @@ const validateAccount = (account: AccountWithFields) => {
     }
   }
 
+  // Метки: не обязательно, максимум 50 символов на каждую
   if (account.tagsText) {
     const tags = account.tagsText.split(';').map(tag => tag.trim()).filter(tag => tag.length > 0)
     for (const tag of tags) {
@@ -149,8 +166,10 @@ const validateAccount = (account: AccountWithFields) => {
     }
   }
 
+  // Сохраняем ошибки для текущего аккаунта
   errorsById.value[account.id] = errors
 
+  // Обновляем данные в store
   store.updateAccount(account.id, {
     tags: account.tags,
     type: account.type,
